@@ -1,0 +1,94 @@
+from openpyxl import load_workbook
+from collections import Counter
+import sys
+
+#wb=load_workbook(r'C:\Users\hqiu\Desktop\客户订单数据 ——（试用数据）.xlsx')
+wb=load_workbook(r'C:\Users\hqiu\Desktop\客户订单数据.xlsx')
+
+#print(wb.get_sheet_names())
+sheet_1=wb.get_sheet_by_name('PSD')
+#sheet_1=wb.get_active_sheet()
+read_str=str(input("请输入你要查询的数据名字："))
+count=1               #记录要查询的数据对应在哪一列
+count_FPSD=1          #记录FPSD对应在哪一列
+count_OTS=1           #记录OTS对应在哪一列
+
+#找到所要查询数据所在的列数
+for cell in list(sheet_1.rows)[0]:
+    if (read_str==cell.value):
+        #print('数据在第'+str(count)+'列；')
+        break
+    else:
+        count=count+1
+
+#找到OTS Status所在的列数
+for cell in list(sheet_1.rows)[0]:
+    if ('OTS Status'==cell.value):
+        break
+    else:
+        count_OTS=count_OTS+1
+
+#找到FPSD Status 所在的列数      
+for cell in list(sheet_1.rows)[0]:
+    if ('FPSD Status'==cell.value):
+        break
+    else:
+        count_FPSD=count_FPSD+1
+
+#找到数据最多有几行
+row_num=sheet_1.max_row
+#print('数据一共有：'+str(row_num)+'行.')  
+
+#检查数据表中是否有我们寻找的数据
+arr_good=[]   #记录OTS数据为GOOD时候对应的要查询数据列的那一行对应的那个数据
+arr_bad=[]    #记录OTS数据为BAD时候对应的要查询数据列的那一行对应的那个数据 
+if (count>len(list(sheet_1.rows)[0])):
+    print('很抱歉，没有这个数据.')
+    sys.exit(0)   #如果没有找到要查询的数据的话，就直接退出程序，不再执行下面的步骤
+else:
+    #print('对应的第'+str(count)+'列数据为：')
+    for i in range(2,row_num+1):
+        if ('GOOD'==sheet_1.cell(row=i,column=count_OTS).value):
+            arr_good.append(sheet_1.cell(row=i,column=count).value)
+        elif ('BAD'==sheet_1.cell(row=i,column=count_OTS).value):
+            arr_bad.append(sheet_1.cell(row=i,column=count).value)
+
+
+count_good = Counter(arr_good)      #建立arr_good对应的统计词典
+count_bad = Counter(arr_bad)         #建立arr_bad对应的统计词典
+count_sum = count_good+count_bad     #建立总的数据对应的统计词典
+               
+print('结果为：GOOD 的对应数据为：')
+print(count_good)
+
+print('结果为：BAD 的对应数据为：')
+print(count_bad)
+
+print('test_counter 加法')
+print(count_sum)
+
+print('总数据的列表')
+count_sum_item=count_sum.items()
+print(count_sum_item)
+
+#获取每个列表里面每个元素的数值                
+#for key,value in count_sum_item:
+#    print(key,value)
+
+#实现统计good的数据里面每个key对应的值占总的数据里面key对应值的比重
+count_good_item=count_good.items()
+proportion=[]
+for key_good,value_good in count_good_item:
+    for key,value in count_sum_item:
+        if (key_good==key):
+            value_p=float(value_good)/float(value)
+            var=(key_good,value_p)
+            proportion.append(var)
+
+#建立对应的列表
+print(proportion)
+
+#建立对应的字典
+dictionary_good=dict(proportion)
+print('产品优秀率是：')
+print(dictionary_good)
